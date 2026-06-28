@@ -1,0 +1,206 @@
+openapi: 3.0.3
+info:
+  title: Enterprise Customer Search and Preference API
+  description: Provides enterprise-level customer search capabilities and central ODS preference management across multiple lines of business (Insurance, Travel, Membership).
+  version: 1.0.0
+servers:
+  - url: https://api.enterprise.com/v1
+    description: Production Environment
+
+paths:
+  /customers/preferences:
+    get:
+      summary: Retrieve customer preferences across systems
+      description: Fetches a customer's communication and privacy preferences from Insurance, Travel, and Membership systems using either customerId or a strict membershipNumber.
+      parameters:
+        - name: customerId
+          in: query
+          description: Unique enterprise customer ID
+          required: false
+          schema:
+            type: string
+        - name: membershipNumber
+          in: query
+          description: Strict search identifier using the customer's membership number
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved customer preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPreferences'
+        '400':
+          description: Invalid request parameters (e.g., neither identifier was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Customer not found in any system
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    # Changed from POST to PUT for better RESTful alignment (Idempotent Save/Update to ODS)
+    put:
+      summary: Save or update customer preferences in centralized ODS
+      description: Pushes or overwrites the latest multi-system preference changes for a customer into the centralized Operational Data Store (ODS).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerPreferences'
+      responses:
+        '200':
+          description: Preferences successfully saved/updated in ODS
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "SUCCESS"
+                  message:
+                    type: string
+                    example: "Preferences saved successfully in ODS."
+        '400':
+          description: Invalid request body or validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /customers/search:
+    post:
+      summary: Search customer list by name or phone
+      description: Returns a list of matching customers along with the total count based on the provided search criteria.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerSearchRequest'
+      responses:
+        '200':
+          description: Successfully retrieved matching customer list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerSearchResponse'
+        '400':
+          description: Invalid search criteria provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: "CUSTOMER_NOT_FOUND"
+        message:
+          type: string
+          example: "The requested customer could not be found in the system."
+
+    PreferenceItem:
+      type: object
+      required:
+        - lob
+        - doNotText
+        - doNotEmail
+        - doNotMail
+      properties:
+        lob:
+          type: string
+          enum: [insurance, travel, membership]
+          description: Line of Business
+          example: "insurance"
+        doNotText:
+          type: boolean
+          example: true
+        doNotEmail:
+          type: boolean
+          example: true
+        doNotMail:
+          type: boolean
+          example: true
+
+    CustomerPreferences:
+      type: object
+      required:
+        - customerId
+        - preferencesList
+      properties:
+        customerId:
+          type: string
+          example: "CUST-102938"
+        preferencesList:
+          type: array
+          items:
+            $ref: '#/components/schemas/PreferenceItem'
+
+    CustomerSearchRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        phone:
+          type: string
+          example: "+1234567890"
+      description: Allows searching by firstName and lastName combination, or independently by phone number.
+
+    CustomerInfo:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - phone
+        - membershipId
+      properties:
+        firstName:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        email:
+          type: string
+          example: "john.doe@example.com"
+        phone:
+          type: string
+          example: "+1234567890"
+        membershipId:
+          type: string
+          example: "MEM-888999"
+
+    CustomerSearchResponse:
+      type: object
+      required:
+        - customerList
+        - total
+      properties:
+        customerList:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerInfo'
+        total:
+          type: integer
+          example: 100

@@ -1,0 +1,137 @@
+export const PREFERENCE_TOPICS = [
+  {
+    id: 'global',
+    label: 'Allow contact globally',
+    isGlobal: true,
+  },
+  {
+    id: 'membership',
+    label: 'Membership & Account',
+    description: 'Renewals, billing, and account updates',
+  },
+  {
+    id: 'auto',
+    label: 'Auto & Car Care',
+    description: 'Roadside, battery, and vehicle services',
+  },
+  {
+    id: 'travel',
+    label: 'Travel',
+    description: 'Trip planning, vacation packages, and travel deals',
+  },
+  {
+    id: 'insurance',
+    label: 'Insurance & Financial',
+    description: 'Insurance and financial product communications',
+  },
+  {
+    id: 'discounts',
+    label: 'Discounts & Offers',
+    description: 'Partner deals, retail discounts, and promotions',
+  },
+  {
+    id: 'community',
+    label: 'Local & Community',
+    description: 'Club events, safety programs, and local news',
+  },
+]
+
+export const CUSTOMERS = [
+  {
+    id: 'cust-marcus-delgado',
+    firstName: 'Marcus',
+    lastName: 'Delgado',
+    name: 'Marcus Delgado',
+    type: 'MEMBER',
+    membershipNumber: '4290 1180 0023 4471',
+    location: 'Oakland, CA',
+    phone: '(415) 555-0192',
+    email: 'marcus.delgado@email.com',
+    address: '1234 Oak Street, Oakland, CA',
+    doNotContactAll: false,
+    preferences: {
+      global: { call: true, email: true, sms: false, mail: true },
+      membership: { call: false, email: true, sms: false, mail: true },
+      auto: { call: true, email: true, sms: true, mail: false },
+      travel: { call: false, email: true, sms: true, mail: false },
+      insurance: { call: false, email: false, sms: true, mail: true },
+      discounts: { call: false, email: true, sms: true, mail: false },
+      community: { call: false, email: true, sms: false, mail: true },
+    },
+    auditLog: [
+      {
+        id: 'audit-1',
+        title: 'SMS opt-in recorded',
+        detail: 'Agent J. Tran · phone · Jun 24, 2026 10:42 AM',
+      },
+      {
+        id: 'audit-2',
+        title: 'Email frequency set to Weekly',
+        detail: 'Web self-service · May 02, 2026',
+      },
+      {
+        id: 'audit-3',
+        title: 'Physical mail opt-out',
+        detail: 'Agent K. Smith · phone · Jan 15, 2026',
+      },
+    ],
+  },
+  {
+    id: 'cust-marisa-delgado',
+    firstName: 'Marisa',
+    lastName: 'Delgado',
+    name: 'Marisa Delgado',
+    type: 'NON-MEMBER',
+    membershipNumber: null,
+    location: 'San Jose, CA',
+    phone: '(408) 555-0144',
+    email: 'marisa.delgado@email.com',
+    address: '567 Pine Ave, San Jose, CA',
+    doNotContactAll: false,
+    preferences: {
+      global: { call: false, email: true, sms: false, mail: false },
+      membership: { call: false, email: true, sms: false, mail: false },
+      auto: { call: true, email: false, sms: true, mail: false },
+      travel: { call: false, email: true, sms: false, mail: false },
+      insurance: { call: false, email: false, sms: false, mail: false },
+      discounts: { call: false, email: true, sms: true, mail: false },
+      community: { call: false, email: false, sms: false, mail: false },
+    },
+    auditLog: [
+      {
+        id: 'audit-4',
+        title: 'Email opt-in recorded',
+        detail: 'Web self-service · Apr 10, 2026',
+      },
+    ],
+  },
+  {
+    id: 'cust-michael-delgado-reyes',
+    firstName: 'Michael',
+    lastName: 'Delgado-Reyes',
+    name: 'Michael Delgado-Reyes',
+    type: 'MEMBER',
+    membershipNumber: '4290 1180 0098 2210',
+    location: 'Fremont, CA',
+    phone: '(510) 555-0177',
+    email: 'michael.delgado@email.com',
+    address: '890 Maple Dr, Fremont, CA',
+    doNotContactAll: false,
+    preferences: {
+      global: { call: true, email: true, sms: true, mail: true },
+      membership: { call: true, email: true, sms: false, mail: true },
+      auto: { call: true, email: true, sms: false, mail: true },
+      travel: { call: true, email: true, sms: true, mail: false },
+      insurance: { call: false, email: true, sms: false, mail: true },
+      discounts: { call: false, email: true, sms: true, mail: false },
+      community: { call: true, email: true, sms: false, mail: true },
+    },
+    auditLog: [
+      {
+        id: 'audit-5',
+        title: 'Global contact preferences updated',
+        detail: 'Agent J. Tran · phone · Jun 20, 2026 2:15 PM',
+      },
+    ],
+  },
+]

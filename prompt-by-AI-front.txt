@@ -1,0 +1,48 @@
+# Role & Context
+You are an expert full-stack developer specializing in .NET 10 C#, React (Vite), Tailwind CSS, and Azure integrations. 
+I have manually created a clean, split-architecture project skeleton in Windows:
+- `./Backend` contains a pure .NET 10 Web API project.
+- `./Frontend` contains a modern Vite + React project (with react-router-dom and lucide-react already installed).
+
+I need you to implement the full skeleton, core logic, and UI components for a "Customer Preference Management" SPA used by company agents.
+
+# Inputs Provided (Attached Context)
+- Please scan `api-contract.yaml` in the root folder to understand the exact JSON payload structures, URL paths, and HTTP methods for the Postman Mock Server.
+- [CRITICAL UI REFERENCE] I have attached 3 UI Mock-up images (`mockup-search.png`, `mockup-list.png`, `mockup-preference.png`). You MUST strictly replicate the layouts, form fields, text placeholders, and visual hierarchy shown in these images.
+- Currently, the API uses a Postman Mock Server. No authentication (Bearer Token / X-API-Key) is required for now.
+
+# Technical Stack & Preferences
+- Backend: .NET 10 Minimal APIs / Controllers.
+- Frontend: React (Vite), Tailwind CSS, React Router.
+- Styling Preference: Clean, crisp **Dark Mode** aesthetic (slate/zinc dark backgrounds) by default to ensure visual comfort, matching the mock-ups.
+
+# Core Business Workflow & Routing Logic
+Please implement the following views and routing system within `./Frontend/src`:
+
+1. **Authentication State & Error Handling**:
+   - Create a lightweight mock auth context (`useAuth`) that defaults to `isAuthenticated: true` (since SSO is skipped for development).
+   - If an API call fails with a critical error (e.g., 500), route the user to the **Error View (`/error`)**.
+
+2. **Views to Create (Strictly driven by Mock-ups)**:
+   - **Search View (`/`)**: The default entry view. Replicate the input fields (`LastName`, `FirstName`, `PhoneNumber`) and the "Search" button exactly as seen in `mockup-search.png`.
+   - **Customer List View (`/customers`)**: 
+     - *Workflow:* Triggered only if the search API returns **multiple** customers. 
+     - Render the data table exactly matching `mockup-list.png`. Each row must have a "Select" button to fetch that specific customer's preferences.
+   - **Customer Preference View (`/preference/:id`)**:
+     - *Direct Routing Logic:* If the search API returns **exactly one** customer, skip the List View entirely, automatically fetch their preferences, and redirect straight to this view.
+     - Build the interactive form controls (toggles, checkboxes, text inputs) based on `mockup-preference.png` and map them to the YAML contract fields.
+     - Include a **"Save"** button that sends a PUT/POST request to update the preferences, showing a success notification upon completion.
+
+# Implementation Steps Required
+
+## Step 1: Frontend Tailwind & Structure Setup
+- Initialize and configure **Tailwind CSS** inside the `./Frontend` folder (create `tailwind.config.js` and add `@tailwind` directives if missing).
+- Set up the main layout container with a top navigation bar (mock agent info) and a main content router.
+
+## Step 2: Mock API Service Layer
+- Create an API client service in React (using `fetch`) that maps to the URL paths defined in `api-contract.yaml`.
+
+## Step 3: UI View Implementation
+- Generate the code for `SearchView.jsx`, `CustomerListView.jsx`, `PreferenceView.jsx`, and `ErrorView.jsx` leveraging Tailwind CSS for the pixel-perfect dark theme layout.
+
+Please look at the root directory structure and let's start by configuring Tailwind CSS and the core routing skeleton in the `./Frontend` folder first.
