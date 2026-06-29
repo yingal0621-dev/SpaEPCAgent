@@ -1,0 +1,33 @@
+Role: Senior Frontend Security Engineer (React & Azure AD Specialist)
+Task: Integrate Azure AD SSO into our React SPA based on the enterprise architecture specification.
+
+Context:
+1. We are using Azure AD for Single Sign-On (SSO) with redirect/callback flow.
+2. Access control is group-based: We must check ID Token claims for 'groups' to verify if the user belongs to the required Security Group ID. If not authorized, show an "Access not permitted" state or view.
+3. Once authenticated, the retrieved bearer token must replace our 'mock-token' in 'apiClient.js' header interceptor automatically.
+
+Requirements:
+
+Step 1: Environment Variables Setup
+- Add placeholders to `.env.development` and `.env.production`:
+  VITE_AZURE_CLIENT_ID="<Client ID>"
+  VITE_AZURE_AUTHORITY="https://login.microsoftonline.com/<tenant-id>"
+  VITE_AZURE_REDIRECT_URI="http://localhost:5173"
+  VITE_AZURE_REQUIRED_GROUP_ID="<Group ID>"
+
+Step 2: Initialize MSAL Configuration
+- Create `src/authConfig.js` to configure the PublicClientApplication from '@azure/msal-browser' using the environment variables.
+- Configure cacheLocation to 'sessionStorage' and storeAuthConfigItem to 'unsupportedArtifact' for security.
+
+Step 3: Wrap App Component with MSAL Providers
+- Update `src/main.jsx` or `src/App.jsx` to wrap our routing tree inside <MsalProvider>.
+- Implement an authentication wrapper or Guard component. If the user is unauthenticated, trigger a redirect via `instance.loginRedirect()`.
+
+Step 4: Group Authorization & UX Behavior
+- Once authenticated, inspect the account's ID token claims (`idTokenClaims.groups`).
+- If the token does not contain VITE_AZURE_REQUIRED_GROUP_ID, render an "Access not permitted" error layout and prevent the Agent from accessing `StackViewPage`.
+
+Step 5: Token Bridge to API Layer
+- Update `src/api/apiClient.js` or `authService.js` to actively fetch the token from MSAL active account session, ensuring every outbound fetch request contains `Authorization: Bearer <Real Azure AD Token>`.
+
+Please review `App.jsx`, `main.jsx`, `apiClient.js` and provide the complete step-by-step modification. Let's build the secure SSO layer now!
