@@ -1,0 +1,11 @@
+我现在有 service的yaml contract. 但是因为是 在mock up 之前做的， 所以resource 不完全，而且schema 中component的定义也不是很详细。 
+
+请根据我前端的整个flow, 重新修改yaml. 
+
+所有resource get, 或者post 来search 如果没有找到 record , 请return http status 404 并返回Error Response. 
+    {
+        "ReturnCode": 1, 
+        "ReturnMessage": "Failed"
+    }
+
+请先列出可能的 resources. 

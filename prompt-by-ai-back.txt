@@ -1,0 +1,33 @@
+Role: Senior Full-Stack Developer & C#/.NET Expert
+Task: Integrate the React Frontend with the Postman Mock Server API and establish a configurable base URL architecture, laying a solid foundation for future .NET 10 Web API integration.
+
+Context & Current Setup:
+1. We have a React + Vite frontend workspace and a .NET 10 backend workspace under the "SpaEPCAgent" master directory.
+2. We have configured a Postman Mock Server that perfectly honors our "EPC.yaml" contract.
+   - Mock Server Base URL: https://31863110-efc6-42e4-915b-161b7e5f61b6.mock.pstmn.io
+3. Currently, the frontend uses local files (like 'mockApi.js' and 'mockCustomers.js') for rendering data. We need to replace these local mocks with real HTTP 'fetch' or 'axios' calls pointing to our configurable API base.
+
+Requirements:
+
+Step 1: Configure Vite Environment Variables (Configurable Base URL)
+- Create a `.env.development` file in the `Frontend/` root directory.
+- Define a variable: `VITE_API_BASE_URL=https://31863110-efc6-42e4-915b-161b7e5f61b6.mock.pstmn.io`
+- Create a `.env.production` file as a placeholder for later .NET deployment, setting `VITE_API_BASE_URL=/api` or local production port.
+- Update the frontend API configuration module to dynamically read `import.meta.env.VITE_API_BASE_URL` so that switching environments requires zero code changes.
+
+Step 2: Refactor Frontend API Layer ('src/api/mockApi.js' or similar)
+- Modify the API calling methods to use standard `fetch` (or install `axios` if appropriate) to call the Mock Server endpoints.
+- Ensure the payload structures match the REST contract defined in our business logic:
+  - POST `/customers/search` (with query parameters: firstName, lastName, email, phone, address, membershipNumber)
+  - GET `/customers/:customerId/preferences` (to retrieve single customer preferences and audit logs)
+  - PUT or POST `/customers/:customerId/preferences` (to save/update customer preference matrix)
+
+Step 3: Implement Agent Info & Authorization Mocking
+- In the frontend context or API header interceptor, create a placeholder structure for Agent/User Information (e.g., AgentID, Domain, Roles).
+- Hardcode the current Agent Info temporarily, but wrap it cleanly in a dedicated Auth service layout (e.g., an `authService.js` or a React Context).
+- Design it in a way that simulates an asynchronous service call, returning a mock authorized session. This ensures that when we replace it with a real .NET authentication middleware or OAuth/OIDC token service later, the UI authentication flow remains intact.
+
+Instructions for execution:
+- Please check the existing `Frontend/src/api/` folder and `StackViewPage.jsx` to see how functions like `searchCustomers`, `getCustomerById`, and `saveCustomerPreferences` are currently imported and invoked.
+- Maintain existing function signatures so that `StackViewPage.jsx` doesn't break.
+- Provide step-by-step modifications, showing the file paths clearly. Let's do this sequentially!

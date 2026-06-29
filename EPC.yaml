@@ -1,0 +1,250 @@
+openapi: 3.0.3
+info:
+  title: Enterprise Customer Search and Preference API
+  description: API for searching enterprise customers and managing their multi-channel communication preferences, including integrated consensus audit logs.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+
+paths:
+  /customers/search:
+    post:
+      summary: Search members and non-members
+      description: Search enterprise customers based on multi-criteria combinations from the UI form.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  example: ""
+                lastName:
+                  type: string
+                  example: "Delgado"
+                email:
+                  type: string
+                  example: ""
+                phone:
+                  type: string
+                  example: ""
+                address:
+                  type: string
+                  example: ""
+                membershipNumber:
+                  type: string
+                  example: ""
+      responses:
+        '200':
+          description: Successfully retrieved matching contacts list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerSearchResult'
+        '404':
+          description: No matches found for the given criteria.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /customers/{customerId}/preferences:
+    get:
+      summary: Retrieve customer preferences and audit logs
+      description: Fetches the full preference matrix and the complete audit log trail for a specific customer.
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "4290118000234471"
+      responses:
+        '200':
+          description: Successfully retrieved preferences and integrated audit logs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPreferencesResponse'
+        '404':
+          description: Customer or preferences not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Save/Update customer preferences
+      description: full replacement of the preference checkboxes matrix.
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "4290118000234471"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferenceUpdateRequest'
+      responses:
+        '200':
+          description: Preferences updated and new audit log appended successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "Success"
+        '404':
+          description: Failed to update. Customer not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # 搜索结果对象 (对应 UI 中部的表格行)
+    CustomerSearchResult:
+      type: object
+      properties:
+        customerId:
+          type: string
+          example: "4290118000234471"
+        name:
+          type: string
+          example: "Marcus Delgado"
+        type:
+          type: string
+          enum: [MEMBER, NON-MEMBER]
+          example: "MEMBER"
+        membershipNumber:
+          type: string
+          example: "4290 1180 0023 4471"
+        location:
+          type: string
+          example: "Oakland, CA"
+        phone:
+          type: string
+          example: "(415) 555-0192"
+        email:
+          type: string
+          example: "marcus.delgado@email.com"
+
+    # 偏好与日志整合响应体 (对应 UI 下半部分完整展现)
+    CustomerPreferencesResponse:
+      type: object
+      properties:
+        customerId:
+          type: string
+          example: "4290118000234471"
+        doNotContactAll:
+          type: boolean
+          example: false
+        preferencesMatrix:
+          type: array
+          items:
+            $ref: '#/components/schemas/PreferenceRow'
+        auditLogs:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLogEntry'
+
+    # 单行偏好设置 (对应 UI 矩阵的各行业务线)
+    PreferenceRow:
+      type: object
+      properties:
+        lob:
+          type: string
+          enum: [
+            "Allow contact globally",
+            "Membership & Account",
+            "Auto & Car Care",
+            "Travel",
+            "Insurance & Financial",
+            "Discounts & Offers",
+            "Local & Community"
+          ]
+          example: "Auto & Car Care"
+        description:
+          type: string
+          example: "Roadside, battery, and vehicle services"
+        call:
+          type: boolean
+          example: true
+        email:
+          type: boolean
+          example: true
+        sms:
+          type: boolean
+          example: true
+        mail:
+          type: boolean
+          example: false
+
+    # 审计日志条目 (对应 UI 最底部的绿点日志流水)
+    AuditLogEntry:
+      type: object
+      properties:
+        logId:
+          type: string
+          example: "log-99281"
+        actionDescription:
+          type: string
+          example: "SMS opt-in recorded"
+        operator:
+          type: string
+          example: "Agent J. Tran"
+        channel:
+          type: string
+          example: "phone"
+        timestamp:
+          type: string
+          example: "Jun 24, 2026 10:42 AM"
+
+    # PUT 提交时仅需提交矩阵状态
+    PreferenceUpdateRequest:
+      type: object
+      properties:
+        doNotContactAll:
+          type: boolean
+          example: false
+        preferencesMatrix:
+          type: array
+          items:
+            type: object
+            properties:
+              lob:
+                type: string
+                example: "Auto & Car Care"
+              call:
+                type: boolean
+              email:
+                type: boolean
+              sms:
+                type: boolean
+              mail:
+                type: boolean
+
+    # 您要求的统一 404 / 错误响应体
+    ErrorResponse:
+      type: object
+      required:
+        - ReturnCode
+        - ReturnMessage
+      properties:
+        ReturnCode:
+          type: integer
+          example: 1
+        ReturnMessage:
+          type: string
+          example: "Failed"

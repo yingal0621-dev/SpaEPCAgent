@@ -1,0 +1,46 @@
+Role: Senior Full-Stack Developer & C#/.NET Expert
+Task: Refactor Frontend API Layer to integrate with Postman Mock Server, strictly aligning with "EPC.yaml" contract and keeping Base URL configurable.
+
+Context & Current Setup:
+1. We have a React + Vite frontend workspace and a .NET 10 backend workspace under the "SpaEPCAgent" master directory.
+2. A Postman Mock Server is live and fully synchronized with "EPC.yaml".
+   - Mock Server Base URL: https://31863110-efc6-42e4-915b-161b7e5f61b6.mock.pstmn.io
+3. The frontend currently relies on local memory mocks (like 'mockApi.js' and 'mockCustomers.js'). We need to replace them with real HTTP calls (using fetch or axios) pointing to our configurable API base.
+
+Requirements:
+
+Step 1: Configure Vite Environment Variables (Configurable Base URL)
+- Create a `.env.development` file in the `Frontend/` root directory.
+- Define the development API base: `VITE_API_BASE_URL=https://31863110-efc6-42e4-915b-161b7e5f61b6.mock.pstmn.io`
+- Create a `.env.production` file as a deployment placeholder, setting `VITE_API_BASE_URL=/api/v1` (to match the server base path in the YAML contract).
+- Update the frontend API setup to dynamically read `import.meta.env.VITE_API_BASE_URL` so that switching target hosts requires zero code changes.
+
+Step 2: Refactor Frontend API Layer to Strictly Match "EPC.yaml"
+Please refactor 'src/api/mockApi.js' or the active API service file. You must use the `VITE_API_BASE_URL` and fully honor the exact methods and payloads defined in our OpenAPI contract:
+
+1. Search Customers:
+   - Contract: POST `/customers/search`
+   - Request Body (JSON): { firstName, lastName, email, phone, address, membershipNumber }
+   - Expected Response: An array of `CustomerSearchResult` items (fields: customerId, name, type, membershipNumber, location, phone, email).
+   
+2. Get Customer Preferences:
+   - Contract: GET `/customers/{customerId}/preferences`
+   - Path Parameter: customerId
+   - Expected Response: Contains customerId, doNotContactAll, preferencesMatrix (array of PreferenceRow), and auditLogs.
+
+3. Save Customer Preferences:
+   - Contract: PUT `/customers/{customerId}/preferences`
+   - Path Parameter: customerId
+   - Request Body (JSON): Same as `PreferenceUpdateRequest` structure from YAML ({ doNotContactAll, preferencesMatrix: [{ lob, call, email, sms, mail }] })
+
+*CRITICAL*: Maintain the existing frontend function signatures (`searchCustomers`, `getCustomerById`, `saveCustomerPreferences`) used inside `StackViewPage.jsx` so the page wrapper does not break during this transition.
+
+Step 3: Implement Hardcoded Agent Info & Auth Service Layout
+- Create an authentication context or helper wrapper (`authService.js` or standard module).
+- Hardcode the current Agent's context information (e.g., AgentID: "Agent-99281", Name: "J. Tran", CorporateDomain: "INTERNAL") inside the code for now.
+- Inject this Agent Info into an asynchronous function wrapper that simulates a service authentication token exchange.
+- Add placeholders for HTTP headers (e.g., `Authorization: Bearer mock-token`) within your new API fetch/axios interceptor instance, establishing a clean path for when we swap this with real .NET 10 JWT Authentication middleware or an identity provider.
+
+Instructions for execution:
+- Inspect `Frontend/src/api/mockApi.js` and `StackViewPage.jsx` first.
+- Provide clear, step-by-step code modifications with full file paths. Let's process these changes sequentially to keep our Solid Base fully operational!

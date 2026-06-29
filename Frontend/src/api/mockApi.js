@@ -1,65 +1,111 @@
-import { CUSTOMERS } from '../data/mockCustomers'
+import { ApiError, apiRequest } from './apiClient'
+import {
+  buildPreferenceUpdateRequest,
+  buildSearchRequestBody,
+  mapSearchResultToCustomer,
+  mergeCustomerWithPreferences,
+} from './apiMappers'
 
-const delay = (ms = 600) => new Promise((resolve) => setTimeout(resolve, ms))
+const searchResultCache = new Map()
+let lastSearchCriteria = null
 
-function matchesField(value, query) {
-  if (!query?.trim()) return true
-  return value?.toLowerCase().includes(query.trim().toLowerCase())
+function cacheSearchResults(results) {
+  for (const customer of results) {
+    searchResultCache.set(customer.id, customer)
+  }
 }
 
+async function fetchSearchResults(criteria) {
+  lastSearchCriteria = { ...criteria }
+
+  try {
+    const data = await apiRequest('/customers/search', {
+      method: 'POST',
+      body: JSON.stringify(buildSearchRequestBody(criteria)),
+    })
+
+    const rawResults = Array.isArray(data) ? data : []
+    const customerList = rawResults.map(mapSearchResultToCustomer)
+    cacheSearchResults(customerList)
+
+    return customerList
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      return []
+    }
+    throw error
+  }
+}
+
+async function resolveCustomerProfile(customerId) {
+  let profile = searchResultCache.get(customerId)
+
+  if (!profile && lastSearchCriteria) {
+    await fetchSearchResults(lastSearchCriteria)
+    profile = searchResultCache.get(customerId)
+  }
+
+  return profile ?? null
+}
+
+async function fetchCustomerPreferences(customerId) {
+  try {
+    return await apiRequest(`/customers/${encodeURIComponent(customerId)}/preferences`)
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      return null
+    }
+    throw error
+  }
+}
+
+/**
+ * POST /customers/search
+ * Preserves legacy return shape for StackViewPage: { customerList, total }.
+ */
 export async function searchCustomers(criteria) {
-  await delay()
-
-  const results = CUSTOMERS.filter((customer) => {
-    const {
-      firstName = '',
-      lastName = '',
-      email = '',
-      phone = '',
-      address = '',
-      membershipNumber = '',
-    } = criteria
-
-    const hasCriteria = [firstName, lastName, email, phone, address, membershipNumber].some(
-      (field) => field?.trim(),
-    )
-
-    if (!hasCriteria) return false
-
-    return (
-      matchesField(customer.firstName, firstName) &&
-      matchesField(customer.lastName, lastName) &&
-      matchesField(customer.email, email) &&
-      matchesField(customer.phone, phone) &&
-      matchesField(customer.address, address) &&
-      matchesField(customer.membershipNumber ?? '', membershipNumber)
-    )
-  })
+  const customerList = await fetchSearchResults(criteria)
 
   return {
-    customerList: results,
-    total: results.length,
+    customerList,
+    total: customerList.length,
   }
 }
 
+/**
+ * GET /customers/{customerId}/preferences
+ * Merges cached search profile with preferences response for existing UI components.
+ */
 export async function getCustomerById(customerId) {
-  await delay(300)
-  return CUSTOMERS.find((customer) => customer.id === customerId) ?? null
-}
+  const [profile, prefsResponse] = await Promise.all([
+    resolveCustomerProfile(customerId),
+    fetchCustomerPreferences(customerId),
+  ])
 
-export async function saveCustomerPreferences(customerId, preferences) {
-  await delay(800)
-
-  const customer = CUSTOMERS.find((c) => c.id === customerId)
-  if (!customer) {
-    throw new Error('Customer not found')
+  if (!prefsResponse) {
+    return null
   }
 
-  customer.preferences = preferences.preferences
-  customer.doNotContactAll = preferences.doNotContactAll
+  return mergeCustomerWithPreferences(profile, prefsResponse, customerId)
+}
+
+/**
+ * PUT /customers/{customerId}/preferences
+ * Preserves legacy return shape for StackViewPage save handler.
+ */
+export async function saveCustomerPreferences(customerId, payload) {
+  const requestBody = buildPreferenceUpdateRequest(payload)
+
+  const response = await apiRequest(
+    `/customers/${encodeURIComponent(customerId)}/preferences`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(requestBody),
+    },
+  )
 
   return {
-    status: 'SUCCESS',
+    status: response?.status?.toUpperCase?.() ?? 'SUCCESS',
     message: 'Customer preferences updated successfully!',
   }
 }
